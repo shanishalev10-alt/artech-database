@@ -3,27 +3,6 @@ const Soldier = require("../models/soldier");
 const router = new express.Router();
 
 //delete soldier by id
-
-const addSoldierIdToTeam = async (soldierId, teamId, res) => {
-  if (teamId) {
-    try {
-      const team = await Soldier.findById(teamId);
-      console.log(team)
-      if (!team) {
-        return res.status(400).send("No soldier with that id.");
-      }
-
-      if (!team.soldiers.includes(soldierId)) {
-        team.soldiers.push(soldierId);
-      }
-
-      team.save();
-    } catch (e) {
-      res.status(400).send();
-    }
-  }
-};
-
 //update a soldier's info
 router.patch("/soldiers/:id", async (req, res) => {
   const updates = Object.keys(req.body);
@@ -43,14 +22,12 @@ router.patch("/soldiers/:id", async (req, res) => {
 
     updates.forEach((update) => (soldier[update] = req.body[update]));
 
-    addSoldierIdToTeam(soldier._id, soldier.team, res);
-
     await soldier.save();
 
     res.send(soldier);
-  } catch (e) {
-    console.log(e);
-    if (e.name === "CastError") {
+  } catch (error) {
+    console.log(error);
+    if (error.name === "CastError") {
       return res.status(404).send("No soldier with this id");
     }
 
@@ -66,8 +43,8 @@ router.post("/soldiers", async (req, res) => {
     await soldier.populate("team");
     await soldier.save();
     res.status(201).send(soldier);
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.log(error);
     res.status(400).send();
   }
 });
@@ -82,11 +59,11 @@ router.get("/soldiers/:id", async (req, res) => {
 
     await soldier.populate("team");
     res.send(soldier);
-  } catch (e) {
-    if (e.name === "CastError") {
-      return res.status(404).send(e);
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(404).send(error);
     }
-    console.log(e);
+    console.log(error);
     res.status(500).send();
   }
 });
@@ -101,12 +78,33 @@ router.get("/soldiers", async (req, res) => {
     }
 
     res.send(soldiers);
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.log(error);
     res.status(500).send();
   }
 });
 
-//get a team by soldier
+//get a team by soldier id
+router.get("/soldiers/team/:id", async (req, res) => {
+  try {
+    const soldier = await Soldier.findById(req.params.id);
+
+    if (!soldier) {
+      return res.status(404).send("No soldier with this id");
+    }
+
+    if (!soldier.team) {
+      return res.status(404).send("No team listed to this soldier");
+    }
+
+    await soldier.populate("team");
+    await soldier.team.populate("commander")
+
+    res.send(soldier.team);
+  } catch (error) {
+    console.log(e);
+    return res.status(500).send();
+  }
+});
 
 module.exports = router;
