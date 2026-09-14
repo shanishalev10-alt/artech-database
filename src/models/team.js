@@ -9,15 +9,15 @@ const teamSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Soldier"
   },
-  // soldiers: {
-  //   type: [
-  //     {
-  //       type: mongoose.Schema.Types.ObjectId,
-  //       required: true,
-  //       ref: "Soldier"
-  //     }
-  //   ]
-  // }
+  soldiers: {
+    type: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: "Soldier"
+      }
+    ]
+  }
 });
 
 // teamSchema.virtual("soldiers", {
