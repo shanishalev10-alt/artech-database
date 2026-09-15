@@ -4,6 +4,7 @@ const Soldier = require("../models/soldier");
 const router = new express.Router();
 
 //delete a team and everyone in it?
+//ask what is meant to happen
 
 //update team info
 router.patch("/teams/:id", async (req, res) => {
@@ -89,6 +90,7 @@ router.get("/teams", async (req, res) => {
 
     //and this does work...
     for (const team of teams) {
+      await team.populate("soldiers");
       await team.populate("commander");
     }
 
@@ -134,8 +136,9 @@ router.get("/teams/soldiers/:id", async (req, res) => {
       return res.status(404).send("No team with this id");
     }
 
+    await team.populate("soldiers");
     //here get the virtual property and count it
-    const soldierAmount = 0;
+    const soldierAmount = team.soldiers.length;
     res.send(soldierAmount);
   } catch (error) {
     if (error.name === "CastError") {
@@ -143,6 +146,31 @@ router.get("/teams/soldiers/:id", async (req, res) => {
     }
 
     console.log(error);
+    res.status(500).send();
+  }
+});
+
+//get soldiers in team by team name
+router.get("/teams/soldiersinfo/:name", async (req, res) => {
+  try {
+    const team = await Team.findOne({ name: req.params.name });
+    if (!team) {
+      return res.status(404).send("No team with this name");
+    }
+
+    await team.populate("soldiers");
+
+    if (team.soldiers.length === 0) {
+      return res.send("No soldiers in this team yet");
+    }
+
+    res.send(team.soldiers);
+  } catch (error) {
+    console.log(error)
+    if (error.name === "CastError") {
+      return res.status(404).send("No team with this name");
+    }
+
     res.status(500).send();
   }
 });

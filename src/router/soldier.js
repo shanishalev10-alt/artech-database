@@ -3,6 +3,8 @@ const Soldier = require("../models/soldier");
 const router = new express.Router();
 
 //delete soldier by id
+//ask what is meant to happen
+
 //update a soldier's info
 router.patch("/soldiers/:id", async (req, res) => {
   const updates = Object.keys(req.body);
@@ -21,6 +23,8 @@ router.patch("/soldiers/:id", async (req, res) => {
     }
 
     updates.forEach((update) => (soldier[update] = req.body[update]));
+
+    await soldier.populate("team")
 
     await soldier.save();
 
