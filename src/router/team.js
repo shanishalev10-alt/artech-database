@@ -3,8 +3,24 @@ const Team = require("../models/team");
 const Soldier = require("../models/soldier");
 const router = new express.Router();
 
-//delete a team and everyone in it?
-//ask what is meant to happen
+//delete a team 
+router.delete("/teams/:id", async (req, res) => {
+  try {
+    const team = await Team.findByIdAndDelete(req.params.id);
+
+    if (!team) {
+      return res.status(404).send("No team with this id");
+    }
+
+    //delete team property for soldiers who were in this team
+    await Soldier.updateMany({team: team._id}, {$unset: {team: team._id}})
+
+    res.send(team);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send();
+  }
+});
 
 //update team info
 router.patch("/teams/:id", async (req, res) => {
@@ -166,7 +182,7 @@ router.get("/teams/soldiersinfo/:name", async (req, res) => {
 
     res.send(team.soldiers);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     if (error.name === "CastError") {
       return res.status(404).send("No team with this name");
     }

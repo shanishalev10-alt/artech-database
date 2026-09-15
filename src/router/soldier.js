@@ -3,7 +3,20 @@ const Soldier = require("../models/soldier");
 const router = new express.Router();
 
 //delete soldier by id
-//ask what is meant to happen
+router.delete("/soldiers/:id", async (req, res) => {
+  try {
+    const soldier = await Soldier.findByIdAndDelete(req.params.id);
+
+    if (!soldier) {
+      return res.status(404).send("No soldier with this id");
+    }
+
+    res.send(soldier);
+  } catch (error) {
+    console.log(error)
+    res.status(500).send();
+  }
+});
 
 //update a soldier's info
 router.patch("/soldiers/:id", async (req, res) => {
@@ -24,7 +37,7 @@ router.patch("/soldiers/:id", async (req, res) => {
 
     updates.forEach((update) => (soldier[update] = req.body[update]));
 
-    await soldier.populate("team")
+    await soldier.populate("team");
 
     await soldier.save();
 
@@ -102,7 +115,7 @@ router.get("/soldiers/team/:id", async (req, res) => {
     }
 
     await soldier.populate("team");
-    await soldier.team.populate("commander")
+    await soldier.team.populate("commander");
 
     res.send(soldier.team);
   } catch (error) {
