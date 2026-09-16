@@ -1,70 +1,22 @@
 const express = require("express");
 const Team = require("../models/team");
 const Soldier = require("../models/soldier");
-const router = new express.Router();
-
-//delete a team 
-router.delete("/teams/:id", async (req, res) => {
-  try {
-    const team = await Team.findByIdAndDelete(req.params.id);
-
-    if (!team) {
-      return res.status(404).send("No team with this id");
-    }
-
-    //delete team property for soldiers who were in this team
-    await Soldier.updateMany({team: team._id}, {$unset: {team: team._id}})
-
-    res.send(team);
-  } catch (error) {
-    console.log(error);
-    res.status(500).send();
-  }
-});
-
-//update team info
-router.patch("/teams/:id", async (req, res) => {
-  const updates = Object.keys(req.body);
-  const allowedUpdates = ["name", "commander"]; //take care of updating commander by ref and soldiers with virtual thing. also add fields if they do not exist.
-  const isValid = updates.every((update) => allowedUpdates.includes(update));
-
-  if (!isValid) {
-    return res.status(400).send({ error: "Invalid updates" });
-  }
-
-  try {
-    let team = await Team.findById(req.params.id);
-
-    if (!team) {
-      return res.status(404).send("No team with this id");
-    }
-
-    updates.forEach((update) => (team[update] = req.body[update]));
-
-    await team.populate("commander");
-    await team.save();
-    res.send(team);
-  } catch (error) {
-    console.log(error);
-    if (error.name === "CastError") {
-      return res.status(404).send("No team with this id");
-    }
-    res.status(500).send();
-  }
-});
 
 //post new team
 router.post("/teams", async (req, res) => {
   const team = new Team(req.body);
-  console.log(team._id);
 
   try {
     await team.populate("commander");
+
+    if (team.commander === null) {
+      return res.status(404).send({ error: "No soldier with this id" });
+    }
+
     await team.save();
     res.status(201).send(team);
   } catch (error) {
-    console.log(error);
-    res.status(400).send();
+    res.status(400).send(error);
   }
 });
 
@@ -74,7 +26,7 @@ router.get("/teams/:id", async (req, res) => {
     const team = await Team.findById(req.params.id);
 
     if (!team) {
-      return res.status(404).send("No team with this id");
+      return res.status(404).send({ error: "No team with this id" });
     }
 
     await team.populate("commander");
@@ -82,11 +34,10 @@ router.get("/teams/:id", async (req, res) => {
     res.send(team);
   } catch (error) {
     if (error.name === "CastError") {
-      return res.status(404).send("No team with this id");
+      return res.status(404).send({ error: "No team with this id" });
     }
 
-    console.log(error);
-    res.status(500).send();
+    res.status(500).send(error);
   }
 });
 
@@ -99,12 +50,6 @@ router.get("/teams", async (req, res) => {
       return res.send("No teams yet, add a team first.");
     }
 
-    //why does this not work?
-    // teams.forEach(async (team) => {
-    //   await team.populate("commander");
-    // });
-
-    //and this does work...
     for (const team of teams) {
       await team.populate("soldiers");
       await team.populate("commander");
@@ -112,8 +57,63 @@ router.get("/teams", async (req, res) => {
 
     res.send(teams);
   } catch (error) {
-    console.log(error);
-    res.status(500).send();
+    res.status(500).send(error);
+  }
+});
+const router = new express.Router();
+
+//update team info
+router.patch("/teams/:id", async (req, res) => {
+  const updates = Object.keys(req.body);
+  const allowedUpdates = ["name", "commander"];
+  const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+  if (!isValid) {
+    return res.status(400).send({ error: "Invalid updates" });
+  }
+
+  try {
+    let team = await Team.findById(req.params.id);
+
+    if (!team) {
+      return res.status(404).send({ error: "No team with this id" });
+    }
+
+    updates.forEach((update) => (team[update] = req.body[update]));
+
+    await team.populate("commander");
+    await team.save();
+    res.send(team);
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(404).send({ error: "No team with this id" });
+    } else if (error.name === "ValidationError") {
+      return res.status(400).send({ error: "Make sure you change details to valid types" });
+    }
+
+    res.status(500).send(error);
+  }
+});
+
+//delete a team
+router.delete("/teams/:id", async (req, res) => {
+  try {
+    const team = await Team.findByIdAndDelete(req.params.id);
+
+    if (!team) {
+      return res.status(404).send({ error: "No team with this id" });
+    }
+
+    //delete team property for soldiers who were in this team
+    await Soldier.updateMany({ team: team._id }, { $unset: { team: team._id } });
+
+    res.send(team);
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(404).send({ error: "No team with this id" });
+    }
+
+    res.status(500).send(error);
   }
 });
 
@@ -123,11 +123,11 @@ router.get("/teams/commander/:id", async (req, res) => {
     const team = await Team.findById(req.params.id);
 
     if (!team) {
-      return res.status(404).send("No team with this id");
+      return res.status(404).send({ error: "No team with this id" });
     }
 
     if (!team.commander) {
-      return res.status(404).send("No commander listed to this team");
+      return res.status(404).send({ error: "No commander listed to this team" });
     }
 
     await team.populate("commander");
@@ -135,11 +135,10 @@ router.get("/teams/commander/:id", async (req, res) => {
     res.send(team.commander);
   } catch (error) {
     if (error.name === "CastError") {
-      return res.status(404).send("No team with this id");
+      return res.status(404).send({ error: "No team with this id" });
     }
 
-    console.log(error);
-    res.status(500).send();
+    res.status(500).send(error);
   }
 });
 
@@ -149,20 +148,19 @@ router.get("/teams/soldiers/:id", async (req, res) => {
     const team = await Team.findById(req.params.id);
 
     if (!team) {
-      return res.status(404).send("No team with this id");
+      return res.status(404).send({ error: "No team with this id" });
     }
 
     await team.populate("soldiers");
-    //here get the virtual property and count it
+
     const soldierAmount = team.soldiers.length;
     res.send(soldierAmount);
   } catch (error) {
     if (error.name === "CastError") {
-      return res.status(404).send("No team with this id");
+      return res.status(404).send({ error: "No team with this id" });
     }
 
-    console.log(error);
-    res.status(500).send();
+    res.status(500).send(error);
   }
 });
 
@@ -170,24 +168,20 @@ router.get("/teams/soldiers/:id", async (req, res) => {
 router.get("/teams/soldiersinfo/:name", async (req, res) => {
   try {
     const team = await Team.findOne({ name: req.params.name });
+
     if (!team) {
-      return res.status(404).send("No team with this name");
+      return res.status(404).send({ error: "No team with this name" });
     }
 
     await team.populate("soldiers");
 
     if (team.soldiers.length === 0) {
-      return res.send("No soldiers in this team yet");
+      return res.send({ error: "No soldiers in this team yet" });
     }
 
     res.send(team.soldiers);
   } catch (error) {
-    console.log(error);
-    if (error.name === "CastError") {
-      return res.status(404).send("No team with this name");
-    }
-
-    res.status(500).send();
+    res.status(500).send(error);
   }
 });
 
