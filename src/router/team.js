@@ -1,6 +1,7 @@
 const express = require("express");
 const Team = require("../models/team");
 const Soldier = require("../models/soldier");
+const router = new express.Router();
 
 //post new team
 router.post("/teams", async (req, res) => {
@@ -60,7 +61,6 @@ router.get("/teams", async (req, res) => {
     res.status(500).send(error);
   }
 });
-const router = new express.Router();
 
 //update team info
 router.patch("/teams/:id", async (req, res) => {
