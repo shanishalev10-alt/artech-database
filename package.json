@@ -8,10 +8,11 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/index",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon --env-file .env src/index.js"
   },
   "dependencies": {
     "express": "^5.2.1",
+    "http-status-codes": "^2.3.0",
     "mongoose": "^9.9.5"
   }
 }
