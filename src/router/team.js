@@ -2,10 +2,15 @@ const express = require("express");
 const { StatusCodes } = require("http-status-codes");
 const Team = require("../models/team");
 const Soldier = require("../models/soldier");
+const auth = require("../middleware/auth");
+const isTeamLeader = require("../middleware/isTeamLeader");
 const router = new express.Router();
 
+const ascNumber = 1;
+const descNumber = -1;
+
 //post new team
-router.post("/", async (req, res) => {
+router.post("/", auth, isTeamLeader, async (req, res) => {
   const team = new Team(req.body);
 
   try {
@@ -19,12 +24,39 @@ router.post("/", async (req, res) => {
     await team.save();
     res.status(StatusCodes.CREATED).send(team);
   } catch (error) {
-    res.status(StatusCodes.BAD_REQUEST).send(error);
+    res.status(StatusCodes.BAD_REQUEST).send({ error: error.message });
+  }
+});
+
+// GET /teams/commandersByTeamSize?sortBy=asc
+//get all commanders by order of their team size
+router.get("/commandersByTeamSize", auth, async (req, res) => {
+  const sort = {}; 
+ 
+  if (req.query.sortBy) {
+    sort.numOfSoldiers = req.query.sortBy === "desc" ? descNumber : ascNumber;
+  }
+
+  try {
+    const teams = await Team.find({}).sort(sort);
+    console.log(teams.numOfSoldiers); 
+    // const commandersSorted = teams.map(async (team) => {
+    //   return await Soldier.findById(team.commander)
+    // });
+    // console.log('here', commandersSorted)
+
+    // if (commandersSorted.length === 0) {
+    //   res.send("No teams with commanders yet. Add a team and then try again.");
+    // }
+
+    res.send(teams);
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ error: error.message });
   }
 });
 
 //get all the teams
-router.get("/", async (req, res) => {
+router.get("/", auth, async (req, res) => {
   try {
     const teams = await Team.find({});
 
@@ -34,12 +66,12 @@ router.get("/", async (req, res) => {
 
     res.send(teams);
   } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ error: error.message });
   }
 });
 
 //update team info
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", auth, isTeamLeader, async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = ["name", "commander"];
   const isValid = updates.every((update) => allowedUpdates.includes(update));
@@ -63,7 +95,7 @@ router.patch("/:id", async (req, res) => {
     if (error.name === "CastError") {
       return res.status(StatusCodes.NOT_FOUND).send({ error: "Not a valid id!" });
     } else if (error.name === "ValidationError") {
-      return res.status(StatusCodes.BAD_REQUEST).send({ error });
+      return res.status(StatusCodes.BAD_REQUEST).send({ error: error.message });
     }
 
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(error);
@@ -71,7 +103,7 @@ router.patch("/:id", async (req, res) => {
 });
 
 //delete a team
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", auth, isTeamLeader, async (req, res) => {
   try {
     const team = await Team.findById(req.params.id);
 
@@ -87,12 +119,12 @@ router.delete("/:id", async (req, res) => {
       return res.status(StatusCodes.NOT_FOUND).send({ error: "Not a valid id!" });
     }
 
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ error: error.message });
   }
 });
 
 //get commander by team id
-router.get("/commander/:id", async (req, res) => {
+router.get("/:id/commander", auth, async (req, res) => {
   try {
     const team = await Team.findById(req.params.id);
 
@@ -104,19 +136,19 @@ router.get("/commander/:id", async (req, res) => {
       return res.status(StatusCodes.NOT_FOUND).send({ error: "No commander listed to this team" });
     }
 
-    const commander = Soldier.findById(team.commander);
+    const commander = await Soldier.findById(team.commander);
     res.send(commander);
   } catch (error) {
     if (error.name === "CastError") {
       return res.status(StatusCodes.NOT_FOUND).send({ error: "Not a valid id!" });
     }
 
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ error: error.message });
   }
 });
 
 //get soldier amount in team by team id
-router.get("/:teamId/soldiersAmount", async (req, res) => {
+router.get("/:teamId/soldiersAmount", auth, async (req, res) => {
   try {
     const team = await Team.findById(req.params.teamId);
 
@@ -131,12 +163,12 @@ router.get("/:teamId/soldiersAmount", async (req, res) => {
       return res.status(StatusCodes.NOT_FOUND).send({ error: "Not a valid id!" });
     }
 
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ error: error.message });
   }
 });
 
 //get soldiers in team by team name
-router.get("/:teamName/soldiersInfo", async (req, res) => {
+router.get("/:teamName/soldiersInfo", auth, async (req, res) => {
   try {
     const team = await Team.findOne({ name: req.params.teamName });
 
@@ -152,12 +184,12 @@ router.get("/:teamName/soldiersInfo", async (req, res) => {
 
     res.send(soldiers);
   } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ error: error.message });
   }
 });
 
 //get team by id
-router.get("/:id", async (req, res) => {
+router.get("/:id", auth, async (req, res) => {
   try {
     const team = await Team.findById(req.params.id);
 
@@ -167,7 +199,7 @@ router.get("/:id", async (req, res) => {
 
     res.send(team);
   } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ error: error.message });
   }
 });
 
