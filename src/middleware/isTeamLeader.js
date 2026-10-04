@@ -1,9 +1,10 @@
 const { StatusCodes } = require("http-status-codes");
-const Soldier = require("../models/soldier")
+const Team = require("../models/team")
 
 const isTeamLeader = async (req, res, next) => {
   try {
-    if (!req.soldier.isCommander) {
+    const commanderTeam = await Team.find({commander: req.soldier._id})
+    if (commanderTeam.length === 0) {
       throw new Error();
     }
     next();

@@ -27,7 +27,6 @@ const soldierSchema = new mongoose.Schema({
     required: true,
     minLength: 7
   },
-  isCommander: { type: Boolean, default: false },
   tokens: [
     {
       token: {
