@@ -12,13 +12,6 @@ const teamSchema = new mongoose.Schema({
   }
 });
 
-teamSchema.pre("deleteOne", { query: false, document: true }, async function () {
-  const team = this;
-
-  //delete team property for soldiers who were in this team
-  await Soldier.updateMany({ team: team._id }, { $unset: { team: team._id } });//this does not work! // says updateMany is not a function
-});
-
 teamSchema.pre("save", async function () {
   const team = this;
   if (team.isModified("commander")) {

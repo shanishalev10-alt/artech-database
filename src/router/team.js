@@ -112,6 +112,7 @@ router.delete("/:id", auth, isTeamLeader, async (req, res) => {
     }
 
     await team.deleteOne();
+    await Soldier.updateMany({team: team._id}, {$unset: {team: team._id}})
 
     res.send(team);
   } catch (error) {
