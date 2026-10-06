@@ -6,9 +6,6 @@ const auth = require("../middleware/auth");
 const isTeamLeader = require("../middleware/isTeamLeader");
 const router = new express.Router();
 
-const ascNumber = 1;
-const descNumber = -1;
-
 //post new team
 router.post("/", auth, isTeamLeader, async (req, res) => {
   const team = new Team(req.body);
@@ -25,33 +22,6 @@ router.post("/", auth, isTeamLeader, async (req, res) => {
     res.status(StatusCodes.CREATED).send(team);
   } catch (error) {
     res.status(StatusCodes.BAD_REQUEST).send({ error: error.message });
-  }
-});
-
-// GET /teams/commandersByTeamSize?sortBy=asc
-//get all commanders by order of their team size
-router.get("/commandersByTeamSize", auth, async (req, res) => {
-  const sort = {}; 
- 
-  if (req.query.sortBy) {
-    sort.numOfSoldiers = req.query.sortBy === "desc" ? descNumber : ascNumber;
-  }
-
-  try {
-    const teams = await Team.find({}).sort(sort);
-    console.log(teams.numOfSoldiers); 
-    // const commandersSorted = teams.map(async (team) => {
-    //   return await Soldier.findById(team.commander)
-    // });
-    // console.log('here', commandersSorted)
-
-    // if (commandersSorted.length === 0) {
-    //   res.send("No teams with commanders yet. Add a team and then try again.");
-    // }
-
-    res.send(teams);
-  } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ error: error.message });
   }
 });
 
@@ -180,7 +150,7 @@ router.get("/:teamName/soldiersInfo", auth, async (req, res) => {
     const soldiers = await Soldier.find({ team: team._id });
 
     if (soldiers.length === 0) {
-      return res.send({ error: "No soldiers in this team yet" });
+      return res.send( "No soldiers in this team yet" );
     }
 
     res.send(soldiers);

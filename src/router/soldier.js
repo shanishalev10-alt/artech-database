@@ -9,6 +9,7 @@ const router = new express.Router();
 const ascNumber = 1;
 const descNumber = -1;
 const docAmountToGet = 5;
+const oneYear = 1;
 
 //post a new soldier
 router.post("/postSoldier", auth, isTeamLeader, async (req, res) => {
@@ -27,7 +28,6 @@ router.post("/postSoldier", auth, isTeamLeader, async (req, res) => {
 
     res.status(StatusCodes.CREATED).send({ soldier, token });
   } catch (error) {
-    console.log(error);
     res.status(StatusCodes.BAD_REQUEST).send({ error: error.message });
   }
 });
@@ -35,13 +35,11 @@ router.post("/postSoldier", auth, isTeamLeader, async (req, res) => {
 //log in soldier
 router.post("/login", async (req, res) => {
   try {
-    console.log("in here");
     const soldier = await Soldier.findByCredentials(req.body.personalNumber, req.body.password);
     const token = await soldier.generateAuthToken();
 
     res.send({ soldier, token });
   } catch (error) {
-    console.log(error);
     res.status(StatusCodes.BAD_REQUEST).send({ error: error.message });
   }
 });
@@ -84,33 +82,41 @@ router.get("/", auth, async (req, res) => {
 });
 
 //get all soldiers who are not commanders
-router.get("/notCommander", auth, async (req, res) => {
+router.get("/simpleSoldier", auth, async (req, res) => {
   try {
-    const soldiers = await Soldier.find({ isCommander: false });
+    const soldiers = await Soldier.find();
+    const idsOfCommanders = (await Team.find({ commander: { $exists: true } })).map((team) =>
+      team.commander.valueOf()
+    );
+    const simpleSoldier = soldiers.filter((soldier) => {
+      return !idsOfCommanders.includes(soldier._id.toString());
+    });
 
     if (soldiers.length === 0) {
       return res.send("No soldiers yet, add a soldier and try again.");
     }
 
-    const filteredSoldiers = soldiers.map((soldier) => soldier.name);
+    const soldiersNames = simpleSoldier.map((soldier) => soldier.name);
 
-    res.send(filteredSoldiers);
+    res.send(soldiersNames);
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ error: error.message });
   }
 });
 
 //get all soldiers who are enlisted less then a year in groups of five
-router.get("/simpleSoldiers", auth, async (req, res) => {
+router.get("/newSoldiers", auth, async (req, res) => {
   //claculate the soldiers pazam and find by only less then a year
   try {
-    const soldiers = await Soldier.find({})
-      .sort({ enlistmentDate: ascNumber })
+    const date = new Date();
+    const soldiers = await Soldier.find({
+      enlistmentDate: { $gte: date.setFullYear(date.getFullYear() - oneYear) }
+    })
       .limit(docAmountToGet)
       .skip(parseInt(req.query.skip));
 
     if (soldiers.length === 0) {
-      return res.send("No soldiers yet, add a soldier and try again.");
+      return res.send("No new soldiers yet, add a soldier and try again.");
     }
 
     res.send(soldiers);
@@ -131,6 +137,65 @@ router.get("/byPazam", auth, async (req, res) => {
   try {
     const soldiers = await Soldier.find({}).sort(sort);
     res.send(soldiers);
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ error: error.message });
+  }
+});
+
+// GET /soldiers/commandersByTeamSize?sortBy=asc
+//get all commanders by order of their team size
+router.get("/commandersByTeamSize", auth, async (req, res) => {
+  let sortOrder = ascNumber; //default
+
+  if (req.query.sortBy) {
+    sortOrder = req.query.sortBy === "desc" ? descNumber : ascNumber;
+  }
+
+  try {
+    const teams = await Team.aggregate([
+      //get only teams with commanders
+      { $match: { commander: { $exists: true } } },
+      //add a field that has an array of the soldiers in that team
+      {
+        $lookup: {
+          from: "soldiers",
+          localField: "_id",
+          foreignField: "team",
+          as: "soldiersInTeam"
+        }
+      },
+      //construct the returning fields and add a field of the size of the soldiers array
+      {
+        $project: {
+          _id: "$_id",
+          commander: "$commander",
+          soldierAmount: { $size: "$soldiersInTeam" }
+        }
+      },
+      //add the info of the commander
+      {
+        $lookup: {
+          from: "soldiers",
+          localField: "commander",
+          foreignField: "_id",
+          as: "commander"
+        }
+        //add the sorting requested by the route
+      },
+      { $sort: { soldierAmount: sortOrder } },
+      //remove sensitive fields
+      { $project: { "commander.tokens": 0, "commander.password": 0 } },
+      //extract the commander object from the array
+      { $unwind: "$commander" }
+    ]);
+
+    if (teams.length === 0) {
+      res.send("No teams with commanders yet. Add a team and then try again.");
+    }
+
+    const commandersSorted = teams.map((team) => team.commander);
+
+    res.send(commandersSorted);
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ error: error.message });
   }

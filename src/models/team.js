@@ -15,7 +15,7 @@ const teamSchema = new mongoose.Schema({
 teamSchema.pre("save", async function () {
   const team = this;
   if (team.isModified("commander")) {
-    await Soldier.findByIdAndUpdate(team.commander, {isCommander: true})//this does not work! //says findByIdAndUpdate is not a function
+    await Soldier.findByIdAndUpdate(team.commander, { isCommander: true });
   }
 });
 

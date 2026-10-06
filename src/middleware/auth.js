@@ -16,7 +16,6 @@ const auth = async (req, res, next) => {
     req.soldier = soldier;
     next();
   } catch (error) {
-    console.log(error);
     res.status(StatusCodes.UNAUTHORIZED).send({ error: "Please authenticate." });
   }
 };

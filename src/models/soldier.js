@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Team = require("./team");
 
+const logInError = "Unable to log in"
+
 const soldierSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   personalNumber: {
@@ -37,9 +39,10 @@ const soldierSchema = new mongoose.Schema({
   ],
   enlistmentDate: {
     type: Date,
-    required: true
+    default: new Date()
   }
 });
+
 
 soldierSchema.pre("deleteOne", { query: false, document: true }, async function () {
   const soldier = this;
@@ -72,13 +75,13 @@ soldierSchema.statics.findByCredentials = async (personalNumber, password) => {
   const soldier = await Soldier.findOne({ personalNumber });
 
   if (!soldier) {
-    throw new Error("Unable to log in");
+    throw new Error(logInError);
   }
 
   const isMatch = await bcrypt.compare(password, soldier.password);
 
   if (!isMatch) {
-    throw new Error("Unable to log in");
+    throw new Error(logInError);
   }
 
   return soldier;
@@ -87,7 +90,7 @@ soldierSchema.statics.findByCredentials = async (personalNumber, password) => {
 soldierSchema.pre("save", async function () {
   const soldier = this;
   if (soldier.isModified("password")) {
-    soldier.password = await bcrypt.hash(soldier.password, 8);
+    soldier.password = await bcrypt.hash(soldier.password, process.env.HASH_ROUNDS);
   }
 });
 
