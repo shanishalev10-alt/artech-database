@@ -84,21 +84,45 @@ router.get("/", auth, async (req, res) => {
 //get all soldiers who are not commanders
 router.get("/simpleSoldier", auth, async (req, res) => {
   try {
-    const soldiers = await Soldier.find();
-    const idsOfCommanders = (await Team.find({ commander: { $exists: true } })).map((team) =>
-      team.commander.valueOf()
-    );
-    const simpleSoldier = soldiers.filter((soldier) => {
-      return !idsOfCommanders.includes(soldier._id.toString());
-    });
+    //Option 1 with aggregate
+    const soldiers = await Soldier.aggregate([
+      //add the team field if the soldier is a commander
+      { $lookup: { from: "teams", localField: "_id", foreignField: "commander", as: "commander" } },
+      //get only the soldiers that do not have the commander field filled
+      { $match: { "commander._id": { $exists: false } } },
+      //only get the name field
+      {
+        $project: {
+          name: "$name",
+          _id: false
+        }
+      }
+    ]);
 
     if (soldiers.length === 0) {
-      return res.send("No soldiers yet, add a soldier and try again.");
+      return res.send("No simple soldiers yet, add a soldier and try again.");
     }
 
-    const soldiersNames = simpleSoldier.map((soldier) => soldier.name);
+    const soldiersNames = soldiers.map((soldierObject) => soldierObject.name);
 
     res.send(soldiersNames);
+
+    //Option 2 with find and filter
+    // const soldiers = await Soldier.find();
+    // const idsOfCommanders = (await Team.find({ commander: { $exists: true } })).map((team) =>
+    //   team.commander.valueOf()
+    // );
+    // const simpleSoldier = soldiers.filter((soldier) => {
+    //   return !idsOfCommanders.includes(soldier._id.toString());
+    // });
+
+    // if (soldiers.length === 0) {
+    //   return res.send("No simple soldiers yet, add a soldier and try again.");
+    // }
+
+    // const soldiersNames = simpleSoldier.map((soldier) => soldier.name);
+
+    // res.send(soldiersNames);
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ error: error.message });
   }
@@ -184,7 +208,7 @@ router.get("/commandersByTeamSize", auth, async (req, res) => {
       },
       { $sort: { soldierAmount: sortOrder } },
       //remove sensitive fields
-      { $project: { "commander.tokens": 0, "commander.password": 0 } },
+      { $project: { "commander.tokens": false, "commander.password": false } },
       //extract the commander object from the array
       { $unwind: "$commander" }
     ]);
