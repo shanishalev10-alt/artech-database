@@ -1,0 +1,15 @@
+{
+  name: 'pixel',
+  __v: NumberInt('0'),
+  commander: ObjectId('6ac228b6f9b8c8aa8290ffba')
+},
+{
+  name: 'creative',
+  __v: NumberInt('0'),
+  commander: ObjectId('6ac22d82d7c509ba367436ed')
+},
+{
+  name: 'web',
+  __v: NumberInt('0'),
+  commander: ObjectId('6ab4d718435d13ccffa2fe48')
+}

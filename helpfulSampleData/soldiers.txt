@@ -1,0 +1,98 @@
+{
+  name: 'shani',
+  personalNumber: NumberInt('1234566'),
+  rank: 'טוראי',
+  password: '$2b$08$GCs7F9x6rtnInKofYJcMbOObzmQDGxdxIy9QfknYWCVCH/R9GI8FK',
+  enlistmentDate: ISODate('2026-09-20T21:00:00.000Z'),
+  tokens: [],
+  __v: NumberInt('30')
+},
+{
+  name: 'dekel',
+  personalNumber: NumberInt('8334566'),
+  rank: 'רבט',
+  password: '$2b$08$2pBoRZ7jrEpaeusMKEgLr.f5zJxKS/a2HKeLgs3pr3/j30kEPhkZm',
+  enlistmentDate: ISODate('2026-09-20T21:00:00.000Z'),
+  tokens: [
+    {
+      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2YWMyMDBkMjUwY2FhMzhhNGNmOWY4NGEiLCJpYXQiOjE3OTEwOTkwOTB9.4yaUyrsQqDNgl6ZGXSfLNvY5UNbK1Rhtb_c7fpQgyn0',
+      _id: ObjectId('6ac200d250caa38a4cf9f84b')
+    }
+  ],
+  __v: NumberInt('1'),
+  team: ObjectId('6ac1f45655e9f88c5104b4c8')
+},
+{
+  name: 'tamara',
+  personalNumber: NumberInt('8334567'),
+  rank: 'טוראי',
+  password: '$2b$08$4lrqoxWRbBvx6w/uBRWdQeQD8PCkpYk7IJE5mdKw.ObAc7oIiAfLG',
+  enlistmentDate: ISODate('2025-09-20T21:00:00.000Z'),
+  tokens: [
+    {
+      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2YWMyMDM0NmEwNTU4YjJmZjNlYzg3MTkiLCJpYXQiOjE3OTEwOTk3MTl9.6zq6FAwg3KMA6JU4r9wTp-45tosL5tDhQmivN2AglL8',
+      _id: ObjectId('6ac20347a0558b2ff3ec871a')
+    }
+  ],
+  __v: NumberInt('1'),
+  team: ObjectId('6ac1f45655e9f88c5104b4c8')
+},
+{
+  name: 'naama',
+  personalNumber: NumberInt('8334568'),
+  rank: 'טוראי',
+  password: '$2b$08$BsvsP9pYxG2R83ATW/bm7.88CC1A6pDZV05lVx99zppWhzMJ/sUVq',
+  enlistmentDate: ISODate('2024-09-20T21:00:00.000Z'),
+  tokens: [
+    {
+      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2YWMyMDM2MGEwNTU4YjJmZjNlYzg3MzIiLCJpYXQiOjE3OTEwOTk3NDR9.UCX1gaUn-ZZ-mxmoqpKFJsxM0w5IdRQWvwGRb-9tqS8',
+      _id: ObjectId('6ac20360a0558b2ff3ec8733')
+    }
+  ],
+  __v: NumberInt('1'),
+  team: ObjectId('6ac26f3655786b42ae8aab3c')
+},
+{
+  name: 'yael',
+  personalNumber: NumberInt('8334569'),
+  rank: 'רבט',
+  password: '$2b$08$pkMRt4wXfbO3a8opo0ngduhGJ18iwVLefW/vhmxsaLRJYenWidvL2',
+  enlistmentDate: ISODate('2026-09-20T21:00:00.000Z'),
+  tokens: [
+    {
+      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2YWMyMjhiNmY5YjhjOGFhODI5MGZmYmEiLCJpYXQiOjE3OTExMDkzMDJ9.vrZjA3eAqf55cpdGPkcAhJPVve2RAAR7CZALG214BjQ',
+      _id: ObjectId('6ac228b6f9b8c8aa8290ffbb')
+    }
+  ],
+  __v: NumberInt('1')
+},
+{
+  _id: ObjectId('6ac228c8f9b8c8aa8290ffd7'),
+  name: 'amitRIP',
+  personalNumber: NumberInt('8334560'),
+  rank: 'סמר',
+  password: '$2b$08$yel9lRs4NdmWmHQfjuVhEukRrJDH2Gt8myxeacl5L3tIi6u0H5UpO',
+  enlistmentDate: ISODate('2026-09-20T21:00:00.000Z'),
+  tokens: [
+    {
+      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2YWMyMjhjOGY5YjhjOGFhODI5MGZmZDciLCJpYXQiOjE3OTExMDkzMjB9.CbwCqFdSm7EnxU_v-C-72IGWNlmmn_h3y36dNMoFfgk',
+      _id: ObjectId('6ac228c8f9b8c8aa8290ffd8')
+    }
+  ],
+  __v: NumberInt('1')
+},
+{
+  _id: ObjectId('6ac22d82d7c509ba367436ed'),
+  name: 'shelly',
+  personalNumber: NumberInt('8334563'),
+  rank: 'סמל',
+  password: '$2b$08$POUYEUT/aTLqRzHwJM.UtOmBgb0eDwZyamb3vpwfLSeLfs35zX8WK',
+  enlistmentDate: ISODate('2026-10-04T10:41:46.400Z'),
+  tokens: [
+    {
+      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2YWMyMmQ4MmQ3YzUwOWJhMzY3NDM2ZWQiLCJpYXQiOjE3OTExMTA1MzB9.bf2bf1rdMKUNc551tdmfZ6s7xNLu5HOMLabmCiayVjQ',
+      _id: ObjectId('6ac22d82d7c509ba367436ee')
+    }
+  ],
+  __v: NumberInt('1')
+},
