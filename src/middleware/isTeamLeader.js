@@ -10,7 +10,6 @@ const isTeamLeader = async (req, res, next) => {
     }
     next();
   } catch (error) {
-    console.log(error);
     res.status(StatusCodes.UNAUTHORIZED).send({ error: error.message });
   }
 };

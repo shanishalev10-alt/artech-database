@@ -6,13 +6,13 @@ const auth = require("../middleware/auth");
 const isTeamLeader = require("../middleware/isTeamLeader");
 const router = new express.Router();
 
-const ascNumber = 1;
-const descNumber = -1;
-const docAmountToGet = 5;
-const oneYear = 1;
+const ASC_NUMBER = 1;
+const DESC_NUMBER = -1;
+const DOC_AMOUNT_TO_GET = 5;
+const ONE_YEAR = 1;
 
 //post a new soldier
-router.post("/postSoldier", auth, isTeamLeader, async (req, res) => {
+router.post("", auth, isTeamLeader, async (req, res) => {
   const soldier = new Soldier(req.body);
 
   try {
@@ -67,9 +67,17 @@ router.post("/logoutAll", auth, async (req, res) => {
 });
 
 //get all of the soldiers
-router.get("/", auth, async (req, res) => {
+// GET /soldiers?sortBy=asc
+//get all the soldiers by order of pazam
+router.get("", auth, async (req, res) => {
+  const sort = {};
+
+  if (req.query.sortBy) {
+    sort.enlistmentDate = req.query.sortBy === "desc" ? DESC_NUMBER : ASC_NUMBER;
+  }
+
   try {
-    const soldiers = await Soldier.find({});
+    const soldiers = await Soldier.find({}).sort(sort);
 
     if (soldiers.length === 0) {
       return res.send("No soldiers yet, add a soldier and try again.");
@@ -107,14 +115,12 @@ router.get("/simpleSoldier", auth, async (req, res) => {
 
     res.send(soldiersNames);
 
-    //Option 2 with find and filter
+    // Option 2 with find and filter
     // const soldiers = await Soldier.find();
     // const idsOfCommanders = (await Team.find({ commander: { $exists: true } })).map((team) =>
     //   team.commander.valueOf()
     // );
-    // const simpleSoldier = soldiers.filter((soldier) => {
-    //   return !idsOfCommanders.includes(soldier._id.toString());
-    // });
+    // const simpleSoldier = await Soldier.find({_id: {$nin: idsOfCommanders}})
 
     // if (soldiers.length === 0) {
     //   return res.send("No simple soldiers yet, add a soldier and try again.");
@@ -134,9 +140,9 @@ router.get("/newSoldiers", auth, async (req, res) => {
   try {
     const date = new Date();
     const soldiers = await Soldier.find({
-      enlistmentDate: { $gte: date.setFullYear(date.getFullYear() - oneYear) }
+      enlistmentDate: { $gte: date.setFullYear(date.getFullYear() - ONE_YEAR) }
     })
-      .limit(docAmountToGet)
+      .limit(DOC_AMOUNT_TO_GET)
       .skip(parseInt(req.query.skip));
 
     if (soldiers.length === 0) {
@@ -149,30 +155,13 @@ router.get("/newSoldiers", auth, async (req, res) => {
   }
 });
 
-// GET /soldiers/byPazam?sortBy=asc
-//get all the soldiers by order of pazam
-router.get("/byPazam", auth, async (req, res) => {
-  const sort = {};
-
-  if (req.query.sortBy) {
-    sort.enlistmentDate = req.query.sortBy === "desc" ? descNumber : ascNumber;
-  }
-
-  try {
-    const soldiers = await Soldier.find({}).sort(sort);
-    res.send(soldiers);
-  } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ error: error.message });
-  }
-});
-
 // GET /soldiers/commandersByTeamSize?sortBy=asc
 //get all commanders by order of their team size
 router.get("/commandersByTeamSize", auth, async (req, res) => {
-  let sortOrder = ascNumber; //default
+  let sortOrder = ASC_NUMBER; //default
 
   if (req.query.sortBy) {
-    sortOrder = req.query.sortBy === "desc" ? descNumber : ascNumber;
+    sortOrder = req.query.sortBy === "desc" ? DESC_NUMBER : ASC_NUMBER;
   }
 
   try {
@@ -228,7 +217,7 @@ router.get("/commandersByTeamSize", auth, async (req, res) => {
 //update a soldier's info
 router.patch("/:id", auth, isTeamLeader, async (req, res) => {
   const updates = Object.keys(req.body);
-  const allowedUpdates = ["name", "rank", "team"];
+  const allowedUpdates = ["name", "rank", "team", "enlistmentDate"];
   const isValid = updates.every((update) => allowedUpdates.includes(update));
 
   if (!isValid) {
@@ -246,6 +235,7 @@ router.patch("/:id", auth, isTeamLeader, async (req, res) => {
 
     if (updates.includes("team")) {
       const team = await Team.findById(soldier.team);
+
       if (!team) {
         return res.status(StatusCodes.NOT_FOUND).send({ error: "No team with this id" });
       }

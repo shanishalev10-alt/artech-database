@@ -4,7 +4,7 @@ const soldierRouter = require("./router/soldier");
 const teamRouter = require("./router/team");
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = parseInt(process.env.PORT) || 3000;
 
 app.use(express.json());
 app.use("/soldiers", soldierRouter);

@@ -7,7 +7,7 @@ const isTeamLeader = require("../middleware/isTeamLeader");
 const router = new express.Router();
 
 //post new team
-router.post("/", auth, isTeamLeader, async (req, res) => {
+router.post("", auth, isTeamLeader, async (req, res) => {
   const team = new Team(req.body);
 
   try {
@@ -26,7 +26,7 @@ router.post("/", auth, isTeamLeader, async (req, res) => {
 });
 
 //get all the teams
-router.get("/", auth, async (req, res) => {
+router.get("", auth, async (req, res) => {
   try {
     const teams = await Team.find({});
 
@@ -58,6 +58,14 @@ router.patch("/:id", auth, isTeamLeader, async (req, res) => {
     }
 
     updates.forEach((update) => (team[update] = req.body[update]));
+
+    if (updates.includes("commander")) {
+      const soldier = await Soldier.findById(team.commander)
+
+      if (!soldier) {
+        return res.status(StatusCodes.NOT_FOUND).send({ error: "No soldier with this id" })
+      }
+    }
 
     await team.save();
     res.send(team);

@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const Soldier = require("./soldier");
 
 const teamSchema = new mongoose.Schema({
   name: {
@@ -9,13 +8,6 @@ const teamSchema = new mongoose.Schema({
   commander: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Soldier"
-  }
-});
-
-teamSchema.pre("save", async function () {
-  const team = this;
-  if (team.isModified("commander")) {
-    await Soldier.findByIdAndUpdate(team.commander, { isCommander: true });
   }
 });
 

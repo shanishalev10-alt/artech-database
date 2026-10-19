@@ -3,15 +3,17 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Team = require("./team");
 
-const logInError = "Unable to log in"
+const LOG_IN_ERROR = "Unable to log in"
+const PERSONAL_NUMBER_LENGTH = 7
+const MIN_PASSWORD_LENGTH = 7
 
 const soldierSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   personalNumber: {
     type: Number,
     validate(value) {
-      if (value.toString().length !== 7) {
-        throw new Error("Personal number should be a 7 digit number.");
+      if (value.toString().length !== PERSONAL_NUMBER_LENGTH) {
+        throw new Error(`Personal number should be a ${PERSONAL_NUMBER_LENGTH} digit number.`);
       }
     },
     required: true,
@@ -27,7 +29,7 @@ const soldierSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minLength: 7
+    minLength: MIN_PASSWORD_LENGTH
   },
   tokens: [
     {
@@ -75,13 +77,13 @@ soldierSchema.statics.findByCredentials = async (personalNumber, password) => {
   const soldier = await Soldier.findOne({ personalNumber });
 
   if (!soldier) {
-    throw new Error(logInError);
+    throw new Error(LOG_IN_ERROR);
   }
 
   const isMatch = await bcrypt.compare(password, soldier.password);
 
   if (!isMatch) {
-    throw new Error(logInError);
+    throw new Error(LOG_IN_ERROR);
   }
 
   return soldier;
@@ -90,7 +92,7 @@ soldierSchema.statics.findByCredentials = async (personalNumber, password) => {
 soldierSchema.pre("save", async function () {
   const soldier = this;
   if (soldier.isModified("password")) {
-    soldier.password = await bcrypt.hash(soldier.password, process.env.HASH_ROUNDS);
+    soldier.password = await bcrypt.hash(soldier.password, parseInt(process.env.HASH_ROUNDS));
   }
 });
 
